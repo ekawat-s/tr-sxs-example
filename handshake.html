@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>SxS IE11 Demo</title>
+</head>
+<body onload="onLoad()">
+<script>
+
+function pingSxs(port)
+{
+    const url = 'http://127.0.0.1:' + port + '/ping';
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            alert('Found sxs on port' + xhr.response);
+            handshake(port)
+        }
+    }
+    xhr.open('GET', url, true);
+    xhr.send();
+}
+
+function handshake(port)
+{
+    var cmd = { command: 'handshake', productId: '$productId', apiKey: '$apiKey'};
+
+    const url = 'http://127.0.0.1:' + port + '/sxs/v1';
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            alert('Handshake response:' + xhr.response);
+            var result = JSON.parse(xhr.response);
+            openws(port, result.sessionToken);
+        }
+    }
+    xhr.open('POST', url, true);
+    xhr.setRequestHeader("Content-type", "application/json");
+    xhr.send(JSON.stringify(cmd));
+}
+
+function openws(port, token)
+{
+    var host = 'ws://127.0.0.1:' + port + '/sxs/v1/notifications?sessionToken=' + token;
+    try {
+        socket = new WebSocket(host);
+
+        socket.onopen = function (openEvent) {
+            alert('Web Socket opened');
+        };
+
+        socket.onmessage = function (messageEvent) {
+            alert('Web Socket event' + messageEvent.data);
+        };
+    }
+    catch (exception) { console.log(exception); }
+}
+
+function onLoad()
+{
+    pingSxs(9000);
+}
+
+</script>
+</body>
+</html>
